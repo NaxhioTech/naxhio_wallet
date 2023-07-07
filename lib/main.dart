@@ -1,10 +1,9 @@
-// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
+// ignore_for_file: library_private_types_in_public_api, avoid_init_to_null
 
 /*
   NaXhioWallet - main.dart
-  Version: 0.03
-  Added a splash screen with a background video and logo image. 
-  The app checks for existing public/private keys and navigates to the account creation or home screen accordingly.
+  Version: 0.05
+  Implemented basic account creation wizard and step 1 (entering account name and password).
   Created by NaXhio.Tech.
 */
 
@@ -14,7 +13,7 @@ import 'dart:async'; // Needed for asynchronous operations
 import 'naxhio_ui.dart'; // Import the custom NaXhioUI library
 
 void main() {
-  runApp(const NaXhioWallet());
+  runApp(NaXhioWallet());
 }
 
 class NaXhioWallet extends StatelessWidget {
@@ -56,11 +55,11 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (keys == null) {
       // If keys are not found, navigate to AccountCreationScreen
-      Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (_) => const AccountCreationScreen()));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => AccountCreationScreen()));
     } else {
       // If keys are found, navigate to HomePage
-      const Navigator.pushReplacement(
+      Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (_) => HomePage()));
     }
   }
@@ -70,11 +69,11 @@ class _SplashScreenState extends State<SplashScreen> {
     return Stack(
       children: [
         const GlassyVideoBackground(
-          videoSource: 'assets/background_video.mp4',
+          videoSource: 'assets/videos/background_video.mp4',
         ),
         Center(
           child: Image.asset(
-            'assets/logo_transparent.png', // Replace with your actual logo file path
+            'assets/pictures/logo_transparent.png', // Replace with your actual logo file path
             width: MediaQuery.of(context).size.width *
                 0.5, // Logo size is 50% of screen width
           ),
@@ -96,15 +95,77 @@ class HomePage extends StatelessWidget {
   // ...
 }
 
-class AccountCreationScreen extends StatelessWidget {
+class AccountCreationScreen extends StatefulWidget {
   const AccountCreationScreen({super.key});
 
-  // You can replace this placeholder with the actual implementation
+  @override
+  _AccountCreationScreenState createState() => _AccountCreationScreenState();
+}
+
+class _AccountCreationScreenState extends State<AccountCreationScreen> {
+  final _formKey = GlobalKey<FormState>();
+  String _accountName = "Account 1";
+  String _password = "";
+
+  void _nextStep() {
+    // Function to handle the next step
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      // Navigate to the next step, for now, let's go back to HomePage
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => const HomePage()));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: NaXhioUI.GlassyAppBar(title: 'Create Account'),
-      body: const Center(child: Text('Account Creation Screen')),
+      appBar: NaXhioUI.GlassyAppBar(title: 'Create Account - Step 1'),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: <Widget>[
+              TextFormField(
+                initialValue: _accountName,
+                decoration: const InputDecoration(
+                  labelText: 'Account Name',
+                ),
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return 'Please enter a name for your account.';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _accountName = value!;
+                },
+              ),
+              TextFormField(
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                ),
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return 'Please enter a password for your account.';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _password = value!;
+                },
+              ),
+              const SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: _nextStep,
+                child: const Text('Next Step'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
